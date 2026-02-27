@@ -582,3 +582,209 @@ function formatMillones(val) {
   if (val >= 1e3) return (val / 1e3).toFixed(0) + ' K';
   return val.toFixed(0);
 }
+
+/* ================================================================
+   MÓDULO: VISOR DE BASE DE DATOS
+   ================================================================ */
+
+let jsonCountActual = 10;
+let dbDatosFiltrados = [];
+
+/* ---- Abrir / Cerrar modal ---- */
+function abrirModal() {
+  const overlay = document.getElementById('db-overlay');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  inicializarDB();
+}
+
+function cerrarModal() {
+  document.getElementById('db-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function cerrarModalFuera(e) {
+  if (e.target.id === 'db-overlay') cerrarModal();
+}
+
+// Cerrar con Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') cerrarModal();
+});
+
+/* ---- Inicializar DB con los datos cargados ---- */
+function inicializarDB() {
+  const datos = todosLosDatos;
+  dbDatosFiltrados = [...datos];
+
+  // Metadatos de infobar
+  document.getElementById('db-total-registros').textContent = datos.length;
+  const bytes = new TextEncoder().encode(JSON.stringify(datos)).length;
+  document.getElementById('db-file-size').textContent =
+    bytes > 1024 ? (bytes / 1024).toFixed(1) + ' KB' : bytes + ' B';
+
+  renderTablaDB(dbDatosFiltrados);
+  renderJsonViewer(jsonCountActual);
+  renderEstadisticas(datos);
+  actualizarRowCount(dbDatosFiltrados.length, datos.length);
+}
+
+/* ---- Switch de tabs ---- */
+function switchTab(btn, tabId) {
+  document.querySelectorAll('.db-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.db-tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+/* ---- Tabla DB ---- */
+function renderTablaDB(datos) {
+  if (!datos.length) return;
+
+  const columnas = Object.keys(datos[0]);
+
+  // Cabecera
+  const thead = document.getElementById('db-thead');
+  thead.innerHTML = '<tr><th>#</th>' +
+    columnas.map(c => `<th>${c}</th>`).join('') +
+  '</tr>';
+
+  // Filas
+  const tbody = document.getElementById('db-tbody');
+  tbody.innerHTML = datos.map((fila, i) => {
+    const celdas = columnas.map(col => {
+      let val = fila[col];
+      let cls = '';
+      if (col === 'disponibilidad') {
+        cls = val < 80 ? 'text-red' : val < 88 ? 'text-amber' : 'text-green';
+        val = val.toFixed(1) + '%';
+      } else if (col === 'impacto_economico') {
+        cls = 'text-red';
+        val = val.toLocaleString('es-CL');
+      } else if (col === 'area') {
+        cls = val === 'Mina' ? 'text-purple' : 'text-blue';
+      } else if (typeof val === 'number') {
+        val = val.toLocaleString('es-CL', { maximumFractionDigits: 2 });
+      }
+      return `<td class="${cls}">${val}</td>`;
+    }).join('');
+    return `<tr><td>${i + 1}</td>${celdas}</tr>`;
+  }).join('');
+
+  document.getElementById('db-status-text').textContent =
+    `Mostrando ${datos.length} registro(s) · Última carga: ${new Date().toLocaleTimeString('es-CL')}`;
+}
+
+/* ---- Filtrar tabla DB ---- */
+function filtrarTablaDB() {
+  const q = document.getElementById('db-search').value.toLowerCase().trim();
+  if (!q) {
+    dbDatosFiltrados = [...todosLosDatos];
+  } else {
+    dbDatosFiltrados = todosLosDatos.filter(fila =>
+      Object.values(fila).some(v => String(v).toLowerCase().includes(q))
+    );
+  }
+  renderTablaDB(dbDatosFiltrados);
+  actualizarRowCount(dbDatosFiltrados.length, todosLosDatos.length);
+}
+
+function actualizarRowCount(filtradas, total) {
+  document.getElementById('db-row-count').textContent =
+    filtradas === total ? `${total} filas` : `${filtradas} de ${total} filas`;
+}
+
+/* ---- JSON Viewer con syntax highlighting ---- */
+function renderJsonViewer(count) {
+  const datos = count ? todosLosDatos.slice(0, count) : todosLosDatos;
+  const jsonStr = JSON.stringify(datos, null, 2);
+  document.getElementById('db-json-viewer').innerHTML = syntaxHighlight(jsonStr);
+  document.getElementById('json-count').textContent = count || todosLosDatos.length;
+}
+
+function cambiarJsonCount(n) {
+  document.querySelectorAll('.db-json-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  jsonCountActual = n;
+  renderJsonViewer(n);
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      match => {
+        let cls = 'json-num';
+        if (/^"/.test(match)) {
+          cls = /:$/.test(match) ? 'json-key' : 'json-str';
+        } else if (/true|false/.test(match)) {
+          cls = 'json-bool';
+        } else if (/null/.test(match)) {
+          cls = 'json-null';
+        }
+        return `<span class="${cls}">${match}</span>`;
+      }
+    );
+}
+
+/* ---- Estadísticas por campo numérico ---- */
+function renderEstadisticas(datos) {
+  const camposNum = ['disponibilidad','mtbf','mttr','horas_operativas','horas_falla',
+                     'costo_hora_indisponibilidad','impacto_economico'];
+
+  const grid = document.getElementById('db-stats-grid');
+  grid.innerHTML = '';
+
+  camposNum.forEach(campo => {
+    const vals = datos.map(d => d[campo]).filter(v => typeof v === 'number');
+    if (!vals.length) return;
+
+    const min  = Math.min(...vals);
+    const max  = Math.max(...vals);
+    const prom = vals.reduce((a,b) => a+b, 0) / vals.length;
+    const sorted = [...vals].sort((a,b) => a-b);
+    const med  = sorted.length % 2
+      ? sorted[Math.floor(sorted.length/2)]
+      : (sorted[sorted.length/2 - 1] + sorted[sorted.length/2]) / 2;
+
+    const fmt = v => typeof v === 'number'
+      ? v.toLocaleString('es-CL', { maximumFractionDigits: 1 })
+      : v;
+
+    grid.innerHTML += `
+      <div class="db-stat-card">
+        <div class="db-stat-field">${campo}</div>
+        <div class="db-stat-row"><span class="db-stat-key">Registros</span><span class="db-stat-val">${vals.length}</span></div>
+        <div class="db-stat-row"><span class="db-stat-key">Mínimo</span><span class="db-stat-val">${fmt(min)}</span></div>
+        <div class="db-stat-row"><span class="db-stat-key">Máximo</span><span class="db-stat-val">${fmt(max)}</span></div>
+        <div class="db-stat-row"><span class="db-stat-key">Promedio</span><span class="db-stat-val text-cyan">${fmt(prom)}</span></div>
+        <div class="db-stat-row"><span class="db-stat-key">Mediana</span><span class="db-stat-val">${fmt(med)}</span></div>
+      </div>
+    `;
+  });
+
+  // Cards de campos categóricos
+  ['area','tipo_activo','activo'].forEach(campo => {
+    const conteo = {};
+    datos.forEach(d => {
+      const v = d[campo];
+      conteo[v] = (conteo[v] || 0) + 1;
+    });
+    const unicos = Object.keys(conteo).length;
+    const top = Object.entries(conteo).sort((a,b)=>b[1]-a[1]).slice(0,4);
+
+    grid.innerHTML += `
+      <div class="db-stat-card">
+        <div class="db-stat-field">${campo}</div>
+        <div class="db-stat-row"><span class="db-stat-key">Valores únicos</span><span class="db-stat-val">${unicos}</span></div>
+        ${top.map(([v,c]) => `
+          <div class="db-stat-row">
+            <span class="db-stat-key">${v.length > 16 ? v.substring(0,14)+'…' : v}</span>
+            <span class="db-stat-val">${c} registros</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  });
+}
