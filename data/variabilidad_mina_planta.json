@@ -1,0 +1,16 @@
+[
+  {
+    "Fecha": "2026-01-01",
+    "Turno": "A",
+    "Toneladas_Plan": 50000,
+    "Toneladas_Real": 48000,
+    "Impacto_Económico": -12000
+  },
+  {
+    "Fecha": "2026-01-02",
+    "Turno": "B",
+    "Toneladas_Plan": 51000,
+    "Toneladas_Real": 52000,
+    "Impacto_Económico": 8000
+  }
+]

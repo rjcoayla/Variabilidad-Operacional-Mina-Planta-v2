@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Modelo de Analítica para Reducción de Variabilidad en Operaciones Mineras</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<header class="header">
+    <h1>Modelo de Analítica para Reducción de Variabilidad en Operaciones Mineras</h1>
+</header>
+
+<section class="filters">
+    <div>
+        <label>Fecha inicio</label>
+        <input type="date" id="fechaInicio">
+    </div>
+    <div>
+        <label>Fecha fin</label>
+        <input type="date" id="fechaFin">
+    </div>
+    <div>
+        <label>Turno</label>
+        <select id="turnoFilter"></select>
+    </div>
+    <div>
+        <label>Frente Mina</label>
+        <select id="frenteFilter"></select>
+    </div>
+    <div>
+        <label>Línea Planta</label>
+        <select id="lineaFilter"></select>
+    </div>
+    <button id="resetFiltros">Restablecer filtros</button>
+</section>
+
+<section class="kpi-row">
+    <div class="kpi-card" id="kpiProduccion"></div>
+    <div class="kpi-card" id="kpiCumplimiento"></div>
+    <div class="kpi-card" id="kpiDesviacion"></div>
+    <div class="kpi-card" id="kpiImpacto"></div>
+</section>
+
+<section class="charts-row">
+    <canvas id="chartPlanReal"></canvas>
+    <canvas id="chartVariabilidad"></canvas>
+    <canvas id="chartScatter"></canvas>
+</section>
+
+<section class="bottlenecks">
+    <div class="heatmap-container">
+        <h3>Mapa de Cuellos de Botella Mina–Planta</h3>
+        <div id="heatmap"></div>
+    </div>
+
+    <div class="tabla-outliers">
+        <h3>Top Eventos Anómalos</h3>
+        <table id="tablaOutliers">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Turno</th>
+                    <th>Plan</th>
+                    <th>Real</th>
+                    <th>Desviación</th>
+                    <th>Impacto Económico</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</section>
+
+<script src="js/app.js"></script>
+</body>
+</html>
