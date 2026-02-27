@@ -50,12 +50,168 @@
       <div class="header-badge">
         Actualizado: <strong id="last-update">—</strong>
       </div>
+      <button class="btn-ver-db" id="btn-ver-db" onclick="abrirModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+        Ver Base de Datos
+      </button>
       <div class="live-indicator">
         <span class="live-dot"></span>
         En línea
       </div>
     </div>
   </header>
+
+  <!-- ============================================================
+       MODAL – VISOR DE BASE DE DATOS
+       ============================================================ -->
+  <div class="db-overlay" id="db-overlay" onclick="cerrarModalFuera(event)">
+    <div class="db-modal" role="dialog" aria-modal="true" aria-label="Visor de Base de Datos">
+
+      <!-- Barra de título estilo terminal -->
+      <div class="db-titlebar">
+        <div class="db-titlebar-left">
+          <div class="db-traffic-lights">
+            <span class="tl tl-red"   onclick="cerrarModal()"></span>
+            <span class="tl tl-amber"></span>
+            <span class="tl tl-green"></span>
+          </div>
+          <span class="db-titlebar-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+            confiabilidad_activos.json — Solo lectura
+          </span>
+        </div>
+        <div class="db-titlebar-right">
+          <span class="db-engine-badge">JSON · UTF-8</span>
+          <button class="db-close-btn" onclick="cerrarModal()" title="Cerrar">✕</button>
+        </div>
+      </div>
+
+      <!-- Barra de info de la "tabla" -->
+      <div class="db-infobar">
+        <div class="db-infobar-item">
+          <span class="db-info-label">Tabla</span>
+          <span class="db-info-value text-cyan">activos_criticos</span>
+        </div>
+        <div class="db-infobar-item">
+          <span class="db-info-label">Registros</span>
+          <span class="db-info-value" id="db-total-registros">—</span>
+        </div>
+        <div class="db-infobar-item">
+          <span class="db-info-label">Columnas</span>
+          <span class="db-info-value">11</span>
+        </div>
+        <div class="db-infobar-item">
+          <span class="db-info-label">Fuente</span>
+          <span class="db-info-value">data/confiabilidad_activos.json</span>
+        </div>
+        <div class="db-infobar-item">
+          <span class="db-info-label">Tamaño</span>
+          <span class="db-info-value" id="db-file-size">—</span>
+        </div>
+        <div class="db-infobar-item">
+          <span class="db-info-label">Acceso</span>
+          <span class="db-info-value text-green">READ ONLY</span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="db-tabs">
+        <button class="db-tab active" data-tab="tabla" onclick="switchTab(this,'tabla')">
+          ▦ Vista Tabla
+        </button>
+        <button class="db-tab" data-tab="esquema" onclick="switchTab(this,'esquema')">
+          ⊞ Esquema / Columnas
+        </button>
+        <button class="db-tab" data-tab="json" onclick="switchTab(this,'json')">
+          { } Vista JSON
+        </button>
+        <button class="db-tab" data-tab="stats" onclick="switchTab(this,'stats')">
+          ∑ Estadísticas
+        </button>
+      </div>
+
+      <!-- Contenido de tabs -->
+      <div class="db-content">
+
+        <!-- TAB: Vista Tabla -->
+        <div class="db-tab-content active" id="tab-tabla">
+          <div class="db-table-toolbar">
+            <div class="db-search-wrap">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" class="db-search" id="db-search" placeholder="Filtrar registros…" oninput="filtrarTablaDB()" />
+            </div>
+            <span class="db-row-count" id="db-row-count">— filas</span>
+          </div>
+          <div class="db-table-wrapper">
+            <table class="db-table" id="db-table">
+              <thead id="db-thead"></thead>
+              <tbody id="db-tbody"></tbody>
+            </table>
+          </div>
+          <div class="db-statusbar">
+            <span id="db-status-text">Listo</span>
+            <span class="db-readonly-badge">🔒 Solo lectura — No se permiten modificaciones</span>
+          </div>
+        </div>
+
+        <!-- TAB: Esquema -->
+        <div class="db-tab-content" id="tab-esquema">
+          <div class="db-schema-wrap">
+            <h3 class="db-schema-title">Definición de columnas · <span class="text-cyan">activos_criticos</span></h3>
+            <table class="db-schema-table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Campo</th><th>Tipo</th><th>Rango / Valores</th><th>Descripción técnica</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td class="text-cyan">fecha</td><td class="db-type">STRING</td><td>YYYY-MM-DD</td><td>Fecha de registro del período analizado</td></tr>
+                <tr><td>2</td><td class="text-cyan">area</td><td class="db-type">ENUM</td><td>"Mina" | "Planta"</td><td>Área operacional de origen del activo</td></tr>
+                <tr><td>3</td><td class="text-cyan">activo</td><td class="db-type">STRING</td><td>—</td><td>Nombre identificador del equipo o activo</td></tr>
+                <tr><td>4</td><td class="text-cyan">tipo_activo</td><td class="db-type">STRING</td><td>camion, pala, molino, faja, perforadora…</td><td>Categoría técnica del activo</td></tr>
+                <tr><td>5</td><td class="text-cyan">disponibilidad</td><td class="db-type">FLOAT</td><td>0.0 – 100.0</td><td>Disponibilidad mecánica en % del período</td></tr>
+                <tr><td>6</td><td class="text-cyan">mtbf</td><td class="db-type">FLOAT</td><td>> 0 (horas)</td><td>Mean Time Between Failures – horas entre fallas</td></tr>
+                <tr><td>7</td><td class="text-cyan">mttr</td><td class="db-type">FLOAT</td><td>> 0 (horas)</td><td>Mean Time To Repair – horas promedio de reparación</td></tr>
+                <tr><td>8</td><td class="text-cyan">horas_operativas</td><td class="db-type">INTEGER</td><td>> 0</td><td>Horas efectivas de operación en el período</td></tr>
+                <tr><td>9</td><td class="text-cyan">horas_falla</td><td class="db-type">INTEGER</td><td>> 0</td><td>Horas de detención por falla en el período</td></tr>
+                <tr><td>10</td><td class="text-cyan">costo_hora_indisponibilidad</td><td class="db-type">INTEGER</td><td>> 0 (USD/h)</td><td>Costo operacional unitario por hora de detención</td></tr>
+                <tr><td>11</td><td class="text-cyan">impacto_economico</td><td class="db-type">INTEGER</td><td>> 0 (USD)</td><td>Pérdida estimada = horas_falla × costo_hora</td></tr>
+              </tbody>
+            </table>
+            <div class="db-formula-box">
+              <span class="db-formula-label">Fórmula clave:</span>
+              <code>impacto_economico = horas_falla × costo_hora_indisponibilidad</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Vista JSON -->
+        <div class="db-tab-content" id="tab-json">
+          <div class="db-json-toolbar">
+            <span class="db-json-label">Mostrando primeros <strong id="json-count">10</strong> registros</span>
+            <div class="db-json-controls">
+              <button class="db-json-btn" onclick="cambiarJsonCount(10)">10</button>
+              <button class="db-json-btn" onclick="cambiarJsonCount(20)">20</button>
+              <button class="db-json-btn" onclick="cambiarJsonCount(null)">Todos</button>
+            </div>
+          </div>
+          <pre class="db-json-viewer" id="db-json-viewer"></pre>
+        </div>
+
+        <!-- TAB: Estadísticas -->
+        <div class="db-tab-content" id="tab-stats">
+          <div class="db-stats-grid" id="db-stats-grid"></div>
+        </div>
+
+      </div><!-- /db-content -->
+    </div><!-- /db-modal -->
+  </div><!-- /db-overlay -->
 
   <!-- ============================================================
        FILTROS
@@ -251,3 +407,4 @@
 
 </body>
 </html>
+
