@@ -5,28 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Modelo Predictivo – Disponibilidad y Confiabilidad de Activos</title>
   <link rel="stylesheet" href="css/styles.css" />
-
-  <!-- Chart.js CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
-          crossorigin="anonymous" defer></script>
-  <!-- App JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous" defer></script>
   <script src="js/app.js" defer></script>
 </head>
 <body>
 
 <div class="dashboard-wrapper">
 
-  <!-- ============================================================
+  <!-- ══════════════════════════════════════════════════
        ENCABEZADO
-       ============================================================ -->
+       ══════════════════════════════════════════════════ -->
   <header class="site-header">
     <div class="header-brand">
       <div class="header-logo">
-        <!-- Ícono SVG inline de engranaje/mina -->
         <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="24" cy="24" r="22" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="4 3"/>
           <circle cx="24" cy="24" r="8" fill="none" stroke="#00d4ff" stroke-width="1.8"/>
-          <!-- Dientes del engranaje -->
           <rect x="22" y="2"  width="4" height="7" rx="1" fill="#00d4ff"/>
           <rect x="22" y="39" width="4" height="7" rx="1" fill="#00d4ff"/>
           <rect x="2"  y="22" width="7" height="4" rx="1" fill="#00d4ff"/>
@@ -35,7 +29,6 @@
           <rect x="35.5" y="8.5"  width="4" height="7" rx="1" fill="#00d4ff" transform="rotate(-45 37.5 8.5)"/>
           <rect x="8.5"  y="35.5" width="4" height="7" rx="1" fill="#00d4ff" transform="rotate(-45 10.5 35.5)"/>
           <rect x="35.5" y="35.5" width="4" height="7" rx="1" fill="#00d4ff" transform="rotate(45 37.5 35.5)"/>
-          <!-- Cruz central -->
           <line x1="24" y1="18" x2="24" y2="30" stroke="#0a0e14" stroke-width="2"/>
           <line x1="18" y1="24" x2="30" y2="24" stroke="#0a0e14" stroke-width="2"/>
         </svg>
@@ -45,220 +38,46 @@
         <p>Gran Minería del Cobre · Activos Críticos · Sistema de Monitoreo</p>
       </div>
     </div>
-
     <div class="header-meta">
-      <div class="header-badge">
-        Actualizado: <strong id="last-update">—</strong>
-      </div>
-      <button class="btn-ver-db" id="btn-ver-db" onclick="abrirModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-        </svg>
+      <div class="header-badge">Actualizado: <strong id="last-update">—</strong></div>
+      <button class="btn-ver-db" onclick="abrirModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         Ver Base de Datos
       </button>
-      <div class="live-indicator">
-        <span class="live-dot"></span>
-        En línea
-      </div>
+      <div class="live-indicator"><span class="live-dot"></span>En línea</div>
     </div>
   </header>
 
-  <!-- ============================================================
-       MODAL – VISOR DE BASE DE DATOS
-       ============================================================ -->
-  <div class="db-overlay" id="db-overlay" onclick="cerrarModalFuera(event)">
-    <div class="db-modal" role="dialog" aria-modal="true" aria-label="Visor de Base de Datos">
-
-      <!-- Barra de título estilo terminal -->
-      <div class="db-titlebar">
-        <div class="db-titlebar-left">
-          <div class="db-traffic-lights">
-            <span class="tl tl-red"   onclick="cerrarModal()"></span>
-            <span class="tl tl-amber"></span>
-            <span class="tl tl-green"></span>
-          </div>
-          <span class="db-titlebar-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-            </svg>
-            confiabilidad_activos.json — Solo lectura
-          </span>
-        </div>
-        <div class="db-titlebar-right">
-          <span class="db-engine-badge">JSON · UTF-8</span>
-          <button class="db-close-btn" onclick="cerrarModal()" title="Cerrar">✕</button>
-        </div>
-      </div>
-
-      <!-- Barra de info de la "tabla" -->
-      <div class="db-infobar">
-        <div class="db-infobar-item">
-          <span class="db-info-label">Tabla</span>
-          <span class="db-info-value text-cyan">activos_criticos</span>
-        </div>
-        <div class="db-infobar-item">
-          <span class="db-info-label">Registros</span>
-          <span class="db-info-value" id="db-total-registros">—</span>
-        </div>
-        <div class="db-infobar-item">
-          <span class="db-info-label">Columnas</span>
-          <span class="db-info-value">11</span>
-        </div>
-        <div class="db-infobar-item">
-          <span class="db-info-label">Fuente</span>
-          <span class="db-info-value">data/confiabilidad_activos.json</span>
-        </div>
-        <div class="db-infobar-item">
-          <span class="db-info-label">Tamaño</span>
-          <span class="db-info-value" id="db-file-size">—</span>
-        </div>
-        <div class="db-infobar-item">
-          <span class="db-info-label">Acceso</span>
-          <span class="db-info-value text-green">READ ONLY</span>
-        </div>
-      </div>
-
-      <!-- Tabs -->
-      <div class="db-tabs">
-        <button class="db-tab active" data-tab="tabla" onclick="switchTab(this,'tabla')">
-          ▦ Vista Tabla
-        </button>
-        <button class="db-tab" data-tab="esquema" onclick="switchTab(this,'esquema')">
-          ⊞ Esquema / Columnas
-        </button>
-        <button class="db-tab" data-tab="json" onclick="switchTab(this,'json')">
-          { } Vista JSON
-        </button>
-        <button class="db-tab" data-tab="stats" onclick="switchTab(this,'stats')">
-          ∑ Estadísticas
-        </button>
-      </div>
-
-      <!-- Contenido de tabs -->
-      <div class="db-content">
-
-        <!-- TAB: Vista Tabla -->
-        <div class="db-tab-content active" id="tab-tabla">
-          <div class="db-table-toolbar">
-            <div class="db-search-wrap">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="text" class="db-search" id="db-search" placeholder="Filtrar registros…" oninput="filtrarTablaDB()" />
-            </div>
-            <span class="db-row-count" id="db-row-count">— filas</span>
-          </div>
-          <div class="db-table-wrapper">
-            <table class="db-table" id="db-table">
-              <thead id="db-thead"></thead>
-              <tbody id="db-tbody"></tbody>
-            </table>
-          </div>
-          <div class="db-statusbar">
-            <span id="db-status-text">Listo</span>
-            <span class="db-readonly-badge">🔒 Solo lectura — No se permiten modificaciones</span>
-          </div>
-        </div>
-
-        <!-- TAB: Esquema -->
-        <div class="db-tab-content" id="tab-esquema">
-          <div class="db-schema-wrap">
-            <h3 class="db-schema-title">Definición de columnas · <span class="text-cyan">activos_criticos</span></h3>
-            <table class="db-schema-table">
-              <thead>
-                <tr>
-                  <th>#</th><th>Campo</th><th>Tipo</th><th>Rango / Valores</th><th>Descripción técnica</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>1</td><td class="text-cyan">fecha</td><td class="db-type">STRING</td><td>YYYY-MM-DD</td><td>Fecha de registro del período analizado</td></tr>
-                <tr><td>2</td><td class="text-cyan">area</td><td class="db-type">ENUM</td><td>"Mina" | "Planta"</td><td>Área operacional de origen del activo</td></tr>
-                <tr><td>3</td><td class="text-cyan">activo</td><td class="db-type">STRING</td><td>—</td><td>Nombre identificador del equipo o activo</td></tr>
-                <tr><td>4</td><td class="text-cyan">tipo_activo</td><td class="db-type">STRING</td><td>camion, pala, molino, faja, perforadora…</td><td>Categoría técnica del activo</td></tr>
-                <tr><td>5</td><td class="text-cyan">disponibilidad</td><td class="db-type">FLOAT</td><td>0.0 – 100.0</td><td>Disponibilidad mecánica en % del período</td></tr>
-                <tr><td>6</td><td class="text-cyan">mtbf</td><td class="db-type">FLOAT</td><td>> 0 (horas)</td><td>Mean Time Between Failures – horas entre fallas</td></tr>
-                <tr><td>7</td><td class="text-cyan">mttr</td><td class="db-type">FLOAT</td><td>> 0 (horas)</td><td>Mean Time To Repair – horas promedio de reparación</td></tr>
-                <tr><td>8</td><td class="text-cyan">horas_operativas</td><td class="db-type">INTEGER</td><td>> 0</td><td>Horas efectivas de operación en el período</td></tr>
-                <tr><td>9</td><td class="text-cyan">horas_falla</td><td class="db-type">INTEGER</td><td>> 0</td><td>Horas de detención por falla en el período</td></tr>
-                <tr><td>10</td><td class="text-cyan">costo_hora_indisponibilidad</td><td class="db-type">INTEGER</td><td>> 0 (USD/h)</td><td>Costo operacional unitario por hora de detención</td></tr>
-                <tr><td>11</td><td class="text-cyan">impacto_economico</td><td class="db-type">INTEGER</td><td>> 0 (USD)</td><td>Pérdida estimada = horas_falla × costo_hora</td></tr>
-              </tbody>
-            </table>
-            <div class="db-formula-box">
-              <span class="db-formula-label">Fórmula clave:</span>
-              <code>impacto_economico = horas_falla × costo_hora_indisponibilidad</code>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB: Vista JSON -->
-        <div class="db-tab-content" id="tab-json">
-          <div class="db-json-toolbar">
-            <span class="db-json-label">Mostrando primeros <strong id="json-count">10</strong> registros</span>
-            <div class="db-json-controls">
-              <button class="db-json-btn" onclick="cambiarJsonCount(10)">10</button>
-              <button class="db-json-btn" onclick="cambiarJsonCount(20)">20</button>
-              <button class="db-json-btn" onclick="cambiarJsonCount(null)">Todos</button>
-            </div>
-          </div>
-          <pre class="db-json-viewer" id="db-json-viewer"></pre>
-        </div>
-
-        <!-- TAB: Estadísticas -->
-        <div class="db-tab-content" id="tab-stats">
-          <div class="db-stats-grid" id="db-stats-grid"></div>
-        </div>
-
-      </div><!-- /db-content -->
-    </div><!-- /db-modal -->
-  </div><!-- /db-overlay -->
-
-  <!-- ============================================================
+  <!-- ══════════════════════════════════════════════════
        FILTROS
-       ============================================================ -->
+       ══════════════════════════════════════════════════ -->
   <section class="filters-section">
     <h2>▸ Parámetros de consulta</h2>
-
     <div class="filters-grid">
-
       <div class="filter-group">
         <label for="filtro-fecha-desde">Fecha desde</label>
         <input type="date" id="filtro-fecha-desde" />
       </div>
-
       <div class="filter-group">
         <label for="filtro-fecha-hasta">Fecha hasta</label>
         <input type="date" id="filtro-fecha-hasta" />
       </div>
-
       <div class="filter-group">
         <label for="filtro-area">Área operacional</label>
-        <select id="filtro-area">
-          <option value="">Todas las áreas</option>
-        </select>
+        <select id="filtro-area"><option value="">Todas las áreas</option></select>
       </div>
-
       <div class="filter-group">
         <label for="filtro-tipo">Tipo de activo</label>
-        <select id="filtro-tipo">
-          <option value="">Todos los tipos</option>
-        </select>
+        <select id="filtro-tipo"><option value="">Todos los tipos</option></select>
       </div>
-
       <div class="filters-actions">
         <button class="btn-reset" id="btn-reset">↺ Limpiar</button>
       </div>
-
       <div class="filter-group">
         <label for="filtro-activo">Activo específico</label>
-        <select id="filtro-activo">
-          <option value="">Todos los activos</option>
-        </select>
+        <select id="filtro-activo"><option value="">Todos los activos</option></select>
       </div>
-
     </div>
-
-    <!-- Chips de filtros rápidos -->
     <div class="chips-row">
       <span class="chip" data-filter="7d">Últimos 7 días</span>
       <span class="chip" data-filter="30d">Últimos 30 días</span>
@@ -266,145 +85,449 @@
     </div>
   </section>
 
-  <!-- ============================================================
+  <!-- ══════════════════════════════════════════════════
        KPIs
-       ============================================================ -->
-  <section class="kpis-grid" aria-label="Indicadores clave de rendimiento">
-
+       ══════════════════════════════════════════════════ -->
+  <section class="kpis-grid">
     <div class="kpi-card kpi-disp">
       <div class="kpi-label"><span class="dot"></span>Disponibilidad Promedio</div>
       <div class="kpi-value" id="kpi-disponibilidad">—</div>
       <div class="kpi-unit">%</div>
       <div class="kpi-sublabel" id="kpi-disp-sub">Cargando datos…</div>
     </div>
-
     <div class="kpi-card kpi-mtbf">
       <div class="kpi-label"><span class="dot"></span>MTBF Promedio</div>
       <div class="kpi-value" id="kpi-mtbf">—</div>
       <div class="kpi-unit">horas</div>
       <div class="kpi-sublabel" id="kpi-mtbf-sub">Tiempo entre fallas</div>
     </div>
-
     <div class="kpi-card kpi-mttr">
       <div class="kpi-label"><span class="dot"></span>MTTR Promedio</div>
       <div class="kpi-value" id="kpi-mttr">—</div>
       <div class="kpi-unit">horas</div>
       <div class="kpi-sublabel" id="kpi-mttr-sub">Tiempo de reparación</div>
     </div>
-
     <div class="kpi-card kpi-econ">
       <div class="kpi-label"><span class="dot"></span>Impacto Económico</div>
       <div class="kpi-value" id="kpi-impacto">—</div>
       <div class="kpi-unit">USD</div>
       <div class="kpi-sublabel" id="kpi-econ-sub">Pérdida por indisponibilidad</div>
     </div>
-
   </section>
 
-  <!-- ============================================================
-       GRÁFICOS PRINCIPALES (2 columnas)
-       ============================================================ -->
-  <section class="charts-row" aria-label="Gráficos de análisis">
-
+  <!-- ══════════════════════════════════════════════════
+       GRÁFICOS
+       ══════════════════════════════════════════════════ -->
+  <section class="charts-row">
     <div class="chart-panel">
       <div class="chart-header">
         <span class="chart-title">Disponibilidad vs Tiempo</span>
         <span class="chart-badge">% por período</span>
       </div>
-      <div class="chart-container">
-        <canvas id="chart-disponibilidad"></canvas>
-      </div>
+      <div class="chart-container"><canvas id="chart-disponibilidad"></canvas></div>
     </div>
-
     <div class="chart-panel">
       <div class="chart-header">
         <span class="chart-title">MTBF vs MTTR por Activo</span>
         <span class="chart-badge">horas</span>
       </div>
-      <div class="chart-container">
-        <canvas id="chart-mtbf-mttr"></canvas>
-      </div>
+      <div class="chart-container"><canvas id="chart-mtbf-mttr"></canvas></div>
     </div>
-
   </section>
 
-  <!-- Gráfico de ranking (ancho completo) -->
   <div class="chart-panel chart-full">
     <div class="chart-header">
       <span class="chart-title">Ranking de Criticidad por Impacto Económico</span>
       <span class="chart-badge">MM USD acumulado</span>
     </div>
-    <div class="chart-container">
-      <canvas id="chart-ranking"></canvas>
-    </div>
+    <div class="chart-container"><canvas id="chart-ranking"></canvas></div>
   </div>
 
-  <!-- ============================================================
-       FILA INFERIOR: Panel de riesgo + Simulación + Tabla
-       ============================================================ -->
+  <!-- ══════════════════════════════════════════════════
+       PANEL RIESGO + SIMULACIÓN + TABLA
+       ══════════════════════════════════════════════════ -->
   <div class="bottom-row">
-
-    <!-- Panel de riesgo -->
-    <aside class="risk-panel" aria-label="Panel de riesgo">
+    <aside class="risk-panel">
       <h2 class="section-title">▸ Panel de Riesgo · Semáforo</h2>
-      <div class="risk-list" id="risk-list">
-        <div class="empty-state">Cargando activos…</div>
-      </div>
-      <div class="insight-box" id="insight-text">
-        Analizando datos del período seleccionado…
-      </div>
+      <div class="risk-list" id="risk-list"><div class="empty-state">Cargando activos…</div></div>
+      <div class="insight-box" id="insight-text">Analizando datos del período seleccionado…</div>
     </aside>
 
-    <!-- Columna derecha: simulación + tabla -->
     <div class="right-column">
-
-      <!-- Módulo de simulación -->
       <div class="sim-panel">
         <h2 class="section-title">▸ Simulación de Mejora de Disponibilidad</h2>
-
         <div class="sim-controls">
           <span class="sim-label">Escenario:</span>
           <button class="sim-btn" data-pct="1">+1%</button>
           <button class="sim-btn" data-pct="2">+2%</button>
           <button class="sim-btn" data-pct="3">+3%</button>
         </div>
-
         <div class="sim-result" id="sim-result">
           <h3>Seleccione un escenario de mejora</h3>
           <p>Elija +1%, +2% o +3% de disponibilidad para calcular el ahorro potencial estimado en el período filtrado.</p>
         </div>
       </div>
 
-      <!-- Tabla de datos -->
       <div class="table-panel">
         <h2 class="section-title">▸ Detalle de Registros</h2>
         <div class="table-wrapper">
           <table id="tabla-datos">
             <thead>
               <tr>
-                <th>Activo</th>
-                <th>Área</th>
-                <th>Tipo</th>
-                <th>Fecha</th>
-                <th>Disp. (%)</th>
-                <th>MTBF (h)</th>
-                <th>MTTR (h)</th>
-                <th>H. Falla</th>
-                <th>Impacto USD</th>
+                <th>Activo</th><th>Área</th><th>Tipo</th><th>Fecha</th>
+                <th>Disp. (%)</th><th>MTBF (h)</th><th>MTTR (h)</th>
+                <th>H. Falla</th><th>Impacto USD</th>
               </tr>
             </thead>
-            <tbody>
-              <tr><td colspan="9" class="empty-state">Cargando datos…</td></tr>
-            </tbody>
+            <tbody><tr><td colspan="9" class="empty-state">Cargando datos…</td></tr></tbody>
           </table>
         </div>
       </div>
+    </div>
+  </div>
 
-    </div><!-- /right-column -->
-  </div><!-- /bottom-row -->
+  <!-- ══════════════════════════════════════════════════
+       FOOTER DEL DASHBOARD
+       ══════════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <p>Modelo Predictivo de Disponibilidad y Confiabilidad de Activos Críticos · Gran Minería del Cobre · Datos Simulados · Febrero 2026 · Creado por René Jacinto Coayla Causillas</p>
+  </footer>
 
 </div><!-- /dashboard-wrapper -->
 
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL – VISOR DE BASE DE DATOS  (estilo Google Sheets / pgAdmin)
+     ══════════════════════════════════════════════════════════════════ -->
+<div class="db-overlay" id="db-overlay" onclick="cerrarModalFuera(event)">
+<div class="db-modal" role="dialog" aria-modal="true">
+
+  <!-- App bar (Sheets style) -->
+  <div class="db-appbar">
+    <div class="db-appbar-left">
+      <div class="db-sheets-icon">
+        <svg width="20" height="20" viewBox="0 0 32 32"><rect width="32" height="32" rx="3" fill="#0f9d58"/><rect x="7" y="8"  width="18" height="3" rx="1" fill="white" opacity=".9"/><rect x="7" y="14" width="18" height="3" rx="1" fill="white" opacity=".9"/><rect x="7" y="20" width="12" height="3" rx="1" fill="white" opacity=".9"/></svg>
+      </div>
+      <div class="db-appbar-meta">
+        <div class="db-appbar-filename">activos_criticos — mindb_prod <span class="db-appbar-saved">✓ Guardado</span></div>
+        <nav class="db-appmenu">
+          <span class="db-amitem">Archivo</span>
+          <span class="db-amitem">Editar</span>
+          <span class="db-amitem">Ver</span>
+          <span class="db-amitem db-amitem--active">Datos</span>
+          <span class="db-amitem">Herramientas</span>
+          <span class="db-amitem">Extensiones</span>
+          <span class="db-amitem">Ayuda</span>
+        </nav>
+      </div>
+    </div>
+    <div class="db-appbar-right">
+      <div class="db-conn-pill">
+        <span class="db-conn-dot"></span>
+        postgresql://192.168.1.45:5432/activos
+      </div>
+      <button class="db-share-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        Compartir
+      </button>
+      <button class="db-appbar-close" onclick="cerrarModal()" title="Cerrar">✕</button>
+    </div>
+  </div>
+
+  <!-- Toolbar (Sheets style) -->
+  <div class="db-toolbar">
+    <button class="db-tb" title="Deshacer">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+    </button>
+    <button class="db-tb" title="Rehacer">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+    </button>
+    <button class="db-tb" title="Imprimir">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    </button>
+    <div class="db-tb-div"></div>
+    <span class="db-tb-zoom">100% ▾</span>
+    <div class="db-tb-div"></div>
+    <button class="db-tb db-tb--run" onclick="ejecutarQuery()" id="btn-run-query">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Ejecutar (F5)
+    </button>
+    <div class="db-tb-div"></div>
+    <button class="db-tb db-tb--text">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtrar
+    </button>
+    <button class="db-tb db-tb--text">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Ordenar
+    </button>
+    <div class="db-tb-div"></div>
+    <div class="db-tb-searchbox">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#80868b" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="db-search" type="text" placeholder="Buscar en resultados…" oninput="filtrarTablaDB()"/>
+    </div>
+    <div style="flex:1"></div>
+    <span class="db-tb-info" id="db-row-count">— filas</span>
+  </div>
+
+  <!-- Barra de fórmula -->
+  <div class="db-formulabar">
+    <div class="db-fb-cellref">A1</div>
+    <div class="db-fb-sep"></div>
+    <span class="db-fb-fx">ƒ<em>x</em></span>
+    <div class="db-fb-query">SELECT * FROM public.activos_criticos WHERE disponibilidad IS NOT NULL ORDER BY impacto_economico DESC</div>
+  </div>
+
+  <!-- Cuerpo: Sidebar + área de hoja -->
+  <div class="db-body">
+
+    <!-- Sidebar árbol -->
+    <aside class="db-sidebar">
+      <div class="db-sb-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        Explorador de BD
+      </div>
+      <div class="db-sb-searchrow">
+        <input type="text" class="db-sb-search" placeholder="Buscar objeto…"/>
+      </div>
+
+      <div class="db-tree">
+        <div class="dbt dbt--server dbt--open">
+          <svg class="dbt-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4285f4" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          <span class="dbt-lbl">192.168.1.45:5432</span>
+          <span class="dbt-tag dbt-tag--blue">PG 15</span>
+        </div>
+        <div class="dbt dbt--db dbt--open" style="padding-left:20px">
+          <svg class="dbt-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0b8043" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <span class="dbt-lbl dbt-lbl--bold">activos</span>
+        </div>
+        <div class="dbt dbt--open" style="padding-left:36px">
+          <svg class="dbt-ico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9e9e9e" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="dbt-lbl">public</span>
+        </div>
+        <div class="dbt dbt--open" style="padding-left:50px">
+          <svg class="dbt-ico" width="12" height="12" viewBox="0 0 24 24" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span class="dbt-lbl">Tablas (4)</span>
+        </div>
+        <div class="dbt dbt--table dbt--active" style="padding-left:66px">
+          <svg class="dbt-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          <span class="dbt-lbl dbt-lbl--active">activos_criticos</span>
+          <span class="dbt-tag dbt-tag--green" id="db-badge-rows">—</span>
+        </div>
+        <div class="dbt dbt--table" style="padding-left:66px">
+          <svg class="dbt-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9e9e9e" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          <span class="dbt-lbl dbt-lbl--dim">planes_mantenimiento</span>
+        </div>
+        <div class="dbt dbt--table" style="padding-left:66px">
+          <svg class="dbt-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9e9e9e" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          <span class="dbt-lbl dbt-lbl--dim">historial_fallas</span>
+        </div>
+        <div class="dbt dbt--table" style="padding-left:66px">
+          <svg class="dbt-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9e9e9e" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          <span class="dbt-lbl dbt-lbl--dim">kpis_mensuales</span>
+        </div>
+        <div class="dbt" style="padding-left:50px;margin-top:3px">
+          <svg class="dbt-ico" width="11" height="11" viewBox="0 0 24 24" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span class="dbt-lbl">Vistas (2)</span>
+        </div>
+        <div class="dbt" style="padding-left:66px">
+          <svg class="dbt-ico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1e88e5" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="dbt-lbl dbt-lbl--view">v_criticidad_activos</span>
+        </div>
+        <div class="dbt" style="padding-left:66px">
+          <svg class="dbt-ico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1e88e5" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="dbt-lbl dbt-lbl--view">v_resumen_mensual</span>
+        </div>
+        <div class="dbt" style="padding-left:50px;margin-top:3px">
+          <svg class="dbt-ico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9e9e9e" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span class="dbt-lbl">Funciones (5)</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Área hoja principal -->
+    <div class="db-workarea">
+
+      <!-- Editor SQL -->
+      <div class="db-sqleditor" id="db-sqleditor">
+        <div class="db-sqled-bar">
+          <span class="db-sqled-title">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            consulta_1.sql
+          </span>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="db-sqled-run" onclick="ejecutarQuery()">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Ejecutar
+            </button>
+            <button class="db-sqled-collapse" onclick="toggleSQL(this)">▲ Colapsar</button>
+          </div>
+        </div>
+        <div class="db-sqled-body" id="db-sqled-body">
+          <div class="db-sqled-linenos" id="db-sqled-linenos">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16</div>
+          <div class="db-sqled-code" contenteditable="true" spellcheck="false"><span class="sk">SELECT</span>
+    ac.id,
+    ac.fecha,
+    ac.area,
+    ac.activo,
+    ac.tipo_activo,
+    ac.disponibilidad,
+    ac.mtbf,
+    ac.mttr,
+    ac.horas_operativas,
+    ac.horas_falla,
+    ac.costo_hora_indisponibilidad,
+    ac.impacto_economico
+<span class="sk">FROM</span>  public.activos_criticos ac
+<span class="sk">WHERE</span> ac.disponibilidad <span class="so">IS NOT NULL</span>
+<span class="sk">ORDER BY</span> ac.impacto_economico <span class="sk">DESC</span><span class="sc">;</span></div>
+        </div>
+      </div>
+
+      <!-- Resultado: tabs superiores tipo pgAdmin -->
+      <div class="db-resultpanel">
+        <div class="db-rptabs">
+          <button class="db-rptab db-rptab--active" data-sheet="resultado">
+            Resultado <span class="db-rptab-badge" id="db-rptab-badge">—</span>
+          </button>
+          <button class="db-rptab" data-sheet="ddl">Esquema DDL</button>
+          <button class="db-rptab" data-sheet="json">JSON Raw</button>
+          <button class="db-rptab" data-sheet="stats">Estadísticas</button>
+        </div>
+
+        <!-- Grid resultado (spreadsheet) -->
+        <div class="db-rpbody" id="db-rpbody">
+          <div class="db-rpcontent db-rpcontent--active" id="rpsheet-resultado">
+            <div class="db-grid-scroll">
+              <table class="db-spreadsheet" id="db-table">
+                <thead id="db-thead"></thead>
+                <tbody id="db-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="db-rpcontent" id="rpsheet-ddl">
+            <div class="db-ddl-wrap">
+              <div class="db-ddl-bar">
+                <span class="db-ddl-crumb">public → activos_criticos → DDL</span>
+                <button class="db-ddl-copy" onclick="this.textContent='✓ Copiado';setTimeout(()=>this.textContent='Copiar DDL',1800)">Copiar DDL</button>
+              </div>
+              <pre class="db-ddl-pre"><span class="sc">-- ================================================</span>
+<span class="sc">-- Tabla: public.activos_criticos</span>
+<span class="sc">-- Base de datos: activos  |  Schema: public</span>
+<span class="sc">-- Motor: PostgreSQL 15.3  |  Generado: 2026-02-15</span>
+<span class="sc">-- ================================================</span>
+
+<span class="sk">CREATE TABLE IF NOT EXISTS</span> public.activos_criticos (
+    id                          <span class="st">SERIAL</span>           <span class="sk">PRIMARY KEY</span>,
+    fecha                       <span class="st">DATE</span>             <span class="sk">NOT NULL</span>,
+    area                        <span class="st">VARCHAR(20)</span>      <span class="sk">NOT NULL</span>
+        <span class="sk">CONSTRAINT</span> chk_area <span class="sk">CHECK</span> (area <span class="sk">IN</span> (<span class="ss">'Mina'</span>, <span class="ss">'Planta'</span>)),
+    activo                      <span class="st">VARCHAR(60)</span>      <span class="sk">NOT NULL</span>,
+    tipo_activo                 <span class="st">VARCHAR(30)</span>      <span class="sk">NOT NULL</span>,
+    disponibilidad              <span class="st">NUMERIC(5,2)</span>     <span class="sk">NOT NULL</span>
+        <span class="sk">CONSTRAINT</span> chk_disp <span class="sk">CHECK</span> (disponibilidad <span class="sk">BETWEEN</span> <span class="sn">0</span> <span class="sk">AND</span> <span class="sn">100</span>),
+    mtbf                        <span class="st">NUMERIC(8,2)</span>     <span class="sk">NOT NULL</span>,
+    mttr                        <span class="st">NUMERIC(6,2)</span>     <span class="sk">NOT NULL</span>,
+    horas_operativas            <span class="st">INTEGER</span>          <span class="sk">NOT NULL</span>,
+    horas_falla                 <span class="st">INTEGER</span>          <span class="sk">NOT NULL</span>,
+    costo_hora_indisponibilidad <span class="st">INTEGER</span>          <span class="sk">NOT NULL</span>,
+    impacto_economico           <span class="st">BIGINT</span>           <span class="sk">NOT NULL</span>
+        <span class="sk">GENERATED ALWAYS AS</span>
+            (horas_falla * costo_hora_indisponibilidad) <span class="sk">STORED</span>
+)
+<span class="sk">TABLESPACE</span> pg_default;
+
+<span class="sk">ALTER TABLE IF EXISTS</span> public.activos_criticos
+    <span class="sk">OWNER TO</span> mindb_admin;
+
+<span class="sc">-- Índices</span>
+<span class="sk">CREATE INDEX</span> idx_act_fecha   <span class="sk">ON</span> public.activos_criticos <span class="sk">USING</span> btree (fecha);
+<span class="sk">CREATE INDEX</span> idx_act_area    <span class="sk">ON</span> public.activos_criticos <span class="sk">USING</span> btree (area);
+<span class="sk">CREATE INDEX</span> idx_act_activo  <span class="sk">ON</span> public.activos_criticos <span class="sk">USING</span> btree (activo);
+<span class="sk">CREATE INDEX</span> idx_act_disp    <span class="sk">ON</span> public.activos_criticos <span class="sk">USING</span> btree (disponibilidad);
+
+<span class="sc">-- Comentarios</span>
+<span class="sk">COMMENT ON TABLE</span>  public.activos_criticos
+    <span class="sk">IS</span> <span class="ss">'KPIs de confiabilidad y disponibilidad de activos críticos. Gran Minería del Cobre.'</span>;
+<span class="sk">COMMENT ON COLUMN</span> public.activos_criticos.disponibilidad
+    <span class="sk">IS</span> <span class="ss">'Disponibilidad mecánica (%): horas_op / (horas_op + horas_falla) × 100'</span>;
+<span class="sk">COMMENT ON COLUMN</span> public.activos_criticos.mtbf
+    <span class="sk">IS</span> <span class="ss">'Mean Time Between Failures (hrs): tiempo promedio entre fallas consecutivas'</span>;
+<span class="sk">COMMENT ON COLUMN</span> public.activos_criticos.mttr
+    <span class="sk">IS</span> <span class="ss">'Mean Time To Repair (hrs): tiempo promedio de reparación o restauración'</span>;</pre>
+            </div>
+          </div>
+
+          <div class="db-rpcontent" id="rpsheet-json">
+            <div class="db-json-bar">
+              <span>Mostrando <strong id="json-count">10</strong> registros</span>
+              <div class="db-json-btns">
+                <button class="db-jbtn db-jbtn--on" onclick="cambiarJsonCount(10,this)">10</button>
+                <button class="db-jbtn" onclick="cambiarJsonCount(20,this)">20</button>
+                <button class="db-jbtn" onclick="cambiarJsonCount(null,this)">Todos</button>
+              </div>
+            </div>
+            <pre class="db-json-pre" id="db-json-viewer"></pre>
+          </div>
+
+          <div class="db-rpcontent" id="rpsheet-stats">
+            <div class="db-stats-grid" id="db-stats-grid"></div>
+          </div>
+        </div><!-- /db-rpbody -->
+      </div><!-- /db-resultpanel -->
+
+    </div><!-- /db-workarea -->
+  </div><!-- /db-body -->
+
+  <!-- Tabs de hojas (fondo, estilo Google Sheets) -->
+  <div class="db-sheettabs">
+    <button class="db-sheettab db-sheettab--add" title="Nueva hoja">+</button>
+    <button class="db-sheettab db-sheettab--active" onclick="syncSheetTab('resultado',this)">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+      activos_criticos
+    </button>
+    <button class="db-sheettab" onclick="syncSheetTab('ddl',this)">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Esquema DDL
+    </button>
+    <button class="db-sheettab" onclick="syncSheetTab('json',this)">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      JSON Raw
+    </button>
+    <button class="db-sheettab" onclick="syncSheetTab('stats',this)">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Estadísticas
+    </button>
+  </div>
+
+  <!-- Status bar -->
+  <div class="db-statusbar">
+    <div class="db-sb-left">
+      <span class="db-sb-conn"><span class="db-sb-dot"></span>Conectado</span>
+      <span class="db-sb-sep">|</span>
+      <span id="db-status-text">Listo</span>
+      <span class="db-sb-sep">|</span>
+      <span id="db-total-registros">—</span>
+    </div>
+    <div class="db-sb-right">
+      <span id="db-exec-time">—</span>
+      <span class="db-sb-sep">|</span>
+      <span class="db-sb-ro">🔒 Solo lectura</span>
+      <span class="db-sb-sep">|</span>
+      <span>PostgreSQL 15.3</span>
+      <span class="db-sb-sep">|</span>
+      <span>UTF-8</span>
+    </div>
+  </div>
+
+  <!-- Footer del modal -->
+  <div class="db-footer">
+    <p>Modelo Predictivo de Disponibilidad y Confiabilidad de Activos Críticos · Gran Minería del Cobre · Datos Simulados · Febrero 2026 · Creado por René Jacinto Coayla Causillas</p>
+  </div>
+
+</div><!-- /db-modal -->
+</div><!-- /db-overlay -->
+
 </body>
 </html>
-
