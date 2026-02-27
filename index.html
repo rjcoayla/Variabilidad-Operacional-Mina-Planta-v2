@@ -1,81 +1,253 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Modelo de Analítica para Reducción de Variabilidad en Operaciones Mineras</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modelo Predictivo – Disponibilidad y Confiabilidad de Activos</title>
+  <link rel="stylesheet" href="css/styles.css" />
 
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+          crossorigin="anonymous" defer></script>
+  <!-- App JS -->
+  <script src="js/app.js" defer></script>
 </head>
-
 <body>
 
-<header class="header">
-    <h1>Modelo de Analítica para Reducción de Variabilidad en Operaciones Mineras</h1>
-</header>
+<div class="dashboard-wrapper">
 
-<section class="filters">
-    <div>
-        <label>Fecha inicio</label>
-        <input type="date" id="fechaInicio">
-    </div>
-    <div>
-        <label>Fecha fin</label>
-        <input type="date" id="fechaFin">
-    </div>
-    <div>
-        <label>Turno</label>
-        <select id="turnoFilter"></select>
-    </div>
-    <div>
-        <label>Frente Mina</label>
-        <select id="frenteFilter"></select>
-    </div>
-    <div>
-        <label>Línea Planta</label>
-        <select id="lineaFilter"></select>
-    </div>
-    <button id="resetFiltros">Restablecer filtros</button>
-</section>
-
-<section class="kpi-row">
-    <div class="kpi-card" id="kpiProduccion"></div>
-    <div class="kpi-card" id="kpiCumplimiento"></div>
-    <div class="kpi-card" id="kpiDesviacion"></div>
-    <div class="kpi-card" id="kpiImpacto"></div>
-</section>
-
-<section class="charts-row">
-    <canvas id="chartPlanReal"></canvas>
-    <canvas id="chartVariabilidad"></canvas>
-    <canvas id="chartScatter"></canvas>
-</section>
-
-<section class="bottlenecks">
-    <div class="heatmap-container">
-        <h3>Mapa de Cuellos de Botella Mina–Planta</h3>
-        <div id="heatmap"></div>
+  <!-- ============================================================
+       ENCABEZADO
+       ============================================================ -->
+  <header class="site-header">
+    <div class="header-brand">
+      <div class="header-logo">
+        <!-- Ícono SVG inline de engranaje/mina -->
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="22" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <circle cx="24" cy="24" r="8" fill="none" stroke="#00d4ff" stroke-width="1.8"/>
+          <!-- Dientes del engranaje -->
+          <rect x="22" y="2"  width="4" height="7" rx="1" fill="#00d4ff"/>
+          <rect x="22" y="39" width="4" height="7" rx="1" fill="#00d4ff"/>
+          <rect x="2"  y="22" width="7" height="4" rx="1" fill="#00d4ff"/>
+          <rect x="39" y="22" width="7" height="4" rx="1" fill="#00d4ff"/>
+          <rect x="8.5"  y="8.5"  width="4" height="7" rx="1" fill="#00d4ff" transform="rotate(45 10.5 8.5)"/>
+          <rect x="35.5" y="8.5"  width="4" height="7" rx="1" fill="#00d4ff" transform="rotate(-45 37.5 8.5)"/>
+          <rect x="8.5"  y="35.5" width="4" height="7" rx="1" fill="#00d4ff" transform="rotate(-45 10.5 35.5)"/>
+          <rect x="35.5" y="35.5" width="4" height="7" rx="1" fill="#00d4ff" transform="rotate(45 37.5 35.5)"/>
+          <!-- Cruz central -->
+          <line x1="24" y1="18" x2="24" y2="30" stroke="#0a0e14" stroke-width="2"/>
+          <line x1="18" y1="24" x2="30" y2="24" stroke="#0a0e14" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>Modelo Predictivo de Disponibilidad y Confiabilidad</h1>
+        <p>Gran Minería del Cobre · Activos Críticos · Sistema de Monitoreo</p>
+      </div>
     </div>
 
-    <div class="tabla-outliers">
-        <h3>Top Eventos Anómalos</h3>
-        <table id="tablaOutliers">
+    <div class="header-meta">
+      <div class="header-badge">
+        Actualizado: <strong id="last-update">—</strong>
+      </div>
+      <div class="live-indicator">
+        <span class="live-dot"></span>
+        En línea
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       FILTROS
+       ============================================================ -->
+  <section class="filters-section">
+    <h2>▸ Parámetros de consulta</h2>
+
+    <div class="filters-grid">
+
+      <div class="filter-group">
+        <label for="filtro-fecha-desde">Fecha desde</label>
+        <input type="date" id="filtro-fecha-desde" />
+      </div>
+
+      <div class="filter-group">
+        <label for="filtro-fecha-hasta">Fecha hasta</label>
+        <input type="date" id="filtro-fecha-hasta" />
+      </div>
+
+      <div class="filter-group">
+        <label for="filtro-area">Área operacional</label>
+        <select id="filtro-area">
+          <option value="">Todas las áreas</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filtro-tipo">Tipo de activo</label>
+        <select id="filtro-tipo">
+          <option value="">Todos los tipos</option>
+        </select>
+      </div>
+
+      <div class="filters-actions">
+        <button class="btn-reset" id="btn-reset">↺ Limpiar</button>
+      </div>
+
+      <div class="filter-group">
+        <label for="filtro-activo">Activo específico</label>
+        <select id="filtro-activo">
+          <option value="">Todos los activos</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- Chips de filtros rápidos -->
+    <div class="chips-row">
+      <span class="chip" data-filter="7d">Últimos 7 días</span>
+      <span class="chip" data-filter="30d">Últimos 30 días</span>
+      <span class="chip" data-filter="top5">Top 5 Críticos</span>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       KPIs
+       ============================================================ -->
+  <section class="kpis-grid" aria-label="Indicadores clave de rendimiento">
+
+    <div class="kpi-card kpi-disp">
+      <div class="kpi-label"><span class="dot"></span>Disponibilidad Promedio</div>
+      <div class="kpi-value" id="kpi-disponibilidad">—</div>
+      <div class="kpi-unit">%</div>
+      <div class="kpi-sublabel" id="kpi-disp-sub">Cargando datos…</div>
+    </div>
+
+    <div class="kpi-card kpi-mtbf">
+      <div class="kpi-label"><span class="dot"></span>MTBF Promedio</div>
+      <div class="kpi-value" id="kpi-mtbf">—</div>
+      <div class="kpi-unit">horas</div>
+      <div class="kpi-sublabel" id="kpi-mtbf-sub">Tiempo entre fallas</div>
+    </div>
+
+    <div class="kpi-card kpi-mttr">
+      <div class="kpi-label"><span class="dot"></span>MTTR Promedio</div>
+      <div class="kpi-value" id="kpi-mttr">—</div>
+      <div class="kpi-unit">horas</div>
+      <div class="kpi-sublabel" id="kpi-mttr-sub">Tiempo de reparación</div>
+    </div>
+
+    <div class="kpi-card kpi-econ">
+      <div class="kpi-label"><span class="dot"></span>Impacto Económico</div>
+      <div class="kpi-value" id="kpi-impacto">—</div>
+      <div class="kpi-unit">USD</div>
+      <div class="kpi-sublabel" id="kpi-econ-sub">Pérdida por indisponibilidad</div>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       GRÁFICOS PRINCIPALES (2 columnas)
+       ============================================================ -->
+  <section class="charts-row" aria-label="Gráficos de análisis">
+
+    <div class="chart-panel">
+      <div class="chart-header">
+        <span class="chart-title">Disponibilidad vs Tiempo</span>
+        <span class="chart-badge">% por período</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart-disponibilidad"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-panel">
+      <div class="chart-header">
+        <span class="chart-title">MTBF vs MTTR por Activo</span>
+        <span class="chart-badge">horas</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart-mtbf-mttr"></canvas>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Gráfico de ranking (ancho completo) -->
+  <div class="chart-panel chart-full">
+    <div class="chart-header">
+      <span class="chart-title">Ranking de Criticidad por Impacto Económico</span>
+      <span class="chart-badge">MM USD acumulado</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="chart-ranking"></canvas>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       FILA INFERIOR: Panel de riesgo + Simulación + Tabla
+       ============================================================ -->
+  <div class="bottom-row">
+
+    <!-- Panel de riesgo -->
+    <aside class="risk-panel" aria-label="Panel de riesgo">
+      <h2 class="section-title">▸ Panel de Riesgo · Semáforo</h2>
+      <div class="risk-list" id="risk-list">
+        <div class="empty-state">Cargando activos…</div>
+      </div>
+      <div class="insight-box" id="insight-text">
+        Analizando datos del período seleccionado…
+      </div>
+    </aside>
+
+    <!-- Columna derecha: simulación + tabla -->
+    <div class="right-column">
+
+      <!-- Módulo de simulación -->
+      <div class="sim-panel">
+        <h2 class="section-title">▸ Simulación de Mejora de Disponibilidad</h2>
+
+        <div class="sim-controls">
+          <span class="sim-label">Escenario:</span>
+          <button class="sim-btn" data-pct="1">+1%</button>
+          <button class="sim-btn" data-pct="2">+2%</button>
+          <button class="sim-btn" data-pct="3">+3%</button>
+        </div>
+
+        <div class="sim-result" id="sim-result">
+          <h3>Seleccione un escenario de mejora</h3>
+          <p>Elija +1%, +2% o +3% de disponibilidad para calcular el ahorro potencial estimado en el período filtrado.</p>
+        </div>
+      </div>
+
+      <!-- Tabla de datos -->
+      <div class="table-panel">
+        <h2 class="section-title">▸ Detalle de Registros</h2>
+        <div class="table-wrapper">
+          <table id="tabla-datos">
             <thead>
-                <tr>
-                    <th>Fecha</th>
-                    <th>Turno</th>
-                    <th>Plan</th>
-                    <th>Real</th>
-                    <th>Desviación</th>
-                    <th>Impacto Económico</th>
-                </tr>
+              <tr>
+                <th>Activo</th>
+                <th>Área</th>
+                <th>Tipo</th>
+                <th>Fecha</th>
+                <th>Disp. (%)</th>
+                <th>MTBF (h)</th>
+                <th>MTTR (h)</th>
+                <th>H. Falla</th>
+                <th>Impacto USD</th>
+              </tr>
             </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-</section>
+            <tbody>
+              <tr><td colspan="9" class="empty-state">Cargando datos…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-<script src="js/app.js"></script>
+    </div><!-- /right-column -->
+  </div><!-- /bottom-row -->
+
+</div><!-- /dashboard-wrapper -->
+
 </body>
 </html>
